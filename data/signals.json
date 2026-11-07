@@ -1,0 +1,11 @@
+{
+ "signals": [],
+ "market": {
+  "symbol": "BTCUSDT",
+  "price": 75984.5,
+  "candle": "2026-11-07 08:00",
+  "rsi": 39.7,
+  "trend": "ከ EMA200 በታች",
+  "checked": "2026-11-07 14:38 UTC"
+ }
+}
