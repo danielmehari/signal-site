@@ -1,68 +1,72 @@
 <!doctype html><html lang="am"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>BTC ሲግናሎች (paper trading)</title>
+<title>ክሪፕቶ ሲግናሎች (paper trading)</title>
 <style>
 :root{--bg:#eef1f4;--card:#fff;--tx:#101828;--mu:#5b6574;--ln:#d5dbe3;--g:#0f7b55;--r:#c0392b;--b:#1f4fd8;--w:#fff4d6}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--tx:#e6e9ef;--mu:#8b95a5;--ln:#262d38;--g:#3ecf8e;--r:#ff7066;--b:#7aa2ff;--w:#2a2410}}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 "Ebrima","Nyala","Segoe UI",system-ui,sans-serif;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
-main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:1.5rem;margin:0 0 2px}h2{font-size:1.15rem;margin:0}
+main{max-width:900px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 2px}h2{font-size:1.15rem;margin:26px 0 8px}
 .mu{color:var(--mu);font-size:.92rem}.g{color:var(--g)}.r{color:var(--r)}
 .warn{background:var(--w);border:1px solid var(--ln);border-radius:6px;padding:10px 12px;margin:14px 0;font-size:.92rem}
-.sig{display:grid;grid-template-columns:150px 1fr;gap:20px;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:18px;margin:16px 0}
-.lad{position:relative;height:240px;border-left:2px solid var(--ln);margin-left:70px}
-.lad i{position:absolute;left:-2px;width:46px;border-top:2px solid var(--tx);font-style:normal;font-size:.8rem;line-height:1}
-.lad i b{position:absolute;right:52px;top:-8px;white-space:nowrap;font-weight:600}
-.lad .tp{border-color:var(--g)}.lad .sl{border-color:var(--r)}
-.lad .px{border-color:var(--b);width:64px;border-top-style:dashed}
-.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--ln);padding:7px 0}
-button{font:inherit;background:var(--b);color:#fff;border:0;border-radius:6px;padding:9px 14px;margin-top:12px;cursor:pointer}
-button:focus-visible,summary:focus-visible{outline:3px solid var(--b);outline-offset:2px}
-.empty{background:var(--card);border:1px dashed var(--ln);border-radius:10px;padding:18px;margin:16px 0}
-dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px 20px;margin:18px 0}
-dt{color:var(--mu);font-size:.85rem}dd{margin:0;font-size:1.3rem;font-weight:600}
-.tabs{display:flex;gap:8px;margin:18px 0 6px}.tabs button{background:transparent;color:var(--tx);border:1px solid var(--ln);margin:0;padding:6px 12px}
-.tabs button[aria-pressed=true]{background:var(--tx);color:var(--bg)}
+.mks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 28px;margin:14px 0}
+.mk{display:grid;grid-template-columns:auto 1fr 110px;gap:2px 12px;align-items:center;border-bottom:1px solid var(--ln);padding:8px 0}
+.mk svg{grid-row:1/3;grid-column:3;width:110px;height:34px}.mk b{font-size:1.02rem}
+.op{background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:12px 14px;margin:8px 0}
+.op header{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.rb{position:relative;display:flex;height:10px;border-radius:5px;overflow:hidden;margin:12px 0 4px}
+.rb i{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--tx)}.rb i.p{background:var(--b);width:5px;border-radius:3px}
+.lv{display:flex;justify-content:space-between;font-size:.88rem}
+button{font:inherit;background:var(--b);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer}
+button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+.empty{background:var(--card);border:1px dashed var(--ln);border-radius:8px;padding:14px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--ln);white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:400;font-size:.88rem}
+tr:last-child td{font-weight:600}
+.fl{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}select{font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:5px 8px}
 details{background:var(--card);border:1px solid var(--ln);border-radius:8px;margin:6px 0;padding:10px 12px}
 summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .tag{display:inline-block;border:1px solid var(--ln);border-radius:20px;padding:0 9px;font-size:.82rem;margin:6px 6px 0 0}
-@media(max-width:560px){.sig{grid-template-columns:1fr}.lad{margin-left:80px}}
 </style></head><body><main>
-<h1>BTC ሲግናሎች</h1><div class="mu" id="mk"></div>
-<div class="warn"><b>ይህ paper trading ነው።</b> ምናባዊ ገንዘብ ብቻ፤ ስትራቴጂው አሁንም እየተፈተነ ነው፣ ትርፋማነቱ አልተረጋገጠም። የገንዘብ ምክር አይደለም፣ በእውነተኛ ገንዘብ አትገበያይበት።</div>
-<div id="cur"></div>
-<dl id="st"></dl><div class="mu" id="small"></div>
-<h2>ያለፉ ሲግናሎች</h2>
-<div class="tabs" id="tabs"></div><div id="list"></div>
+<h1>ክሪፕቶ ሲግናሎች</h1><div class="mu" id="ck"></div>
+<div class="warn"><b>ይህ paper trading ነው።</b> ምናባዊ ገንዘብ ብቻ፤ ስትራቴጂዎቹ አሁንም እየተፈተኑ ነው፣ ትርፋማነታቸው አልተረጋገጠም። የገንዘብ ምክር አይደለም፣ በእውነተኛ ገንዘብ አትገበያይባቸው።</div>
+<div class="mks" id="mks"></div>
+<h2 id="oh">ክፍት ሲግናሎች</h2><div id="cur"></div>
+<h2>ስትራቴጂዎች ሲወዳደሩ</h2><div class="tw" id="st"></div><div class="mu" id="nt"></div>
+<h2>ያለፉ ሲግናሎች</h2><div class="fl" id="fl"></div><div id="list"></div>
 </main><script>
-const D={"signals": [], "market": {"symbol": "BTCUSDT", "price": 75984.5, "candle": "2026-11-07 08:00", "rsi": 39.7, "trend": "ከ EMA200 በታች", "checked": "2026-11-07 14:38 UTC"}},S=D.signals,M=D.market||{},$=q=>document.querySelector(q);
-const f=x=>x==null?"–":Number(x).toLocaleString("en-US",{maximumFractionDigits:2});
-const op=S.find(s=>s.status==="OPEN"),dn=S.filter(s=>s.status!=="OPEN").sort((a,b)=>b.closed.localeCompare(a.closed));
-$("#mk").textContent=`${M.symbol||""} ${f(M.price)} · ${M.trend||""} · RSI ${M.rsi??"–"} · ተፈትሿል ${M.checked||"–"}`;
-if(op){const v=[op.sl,op.tp,op.entry,M.price],hi=Math.max(...v),lo=Math.min(...v),pd=(hi-lo)*.08,H=hi+pd,L=lo-pd,y=x=>(H-x)/(H-L)*100;
- const m=(c,x,t)=>`<i class="${c}" style="top:${y(x)}%"><b>${t} ${f(x)}</b></i>`;
- const pr=Math.abs(op.entry-op.sl)/op.entry*100,rw=Math.abs(op.tp-op.entry)/op.entry*100;
- $("#cur").innerHTML=`<section class="sig"><div class="lad">${m("tp",op.tp,"TP")}${m("",op.entry,"entry")}${m("sl",op.sl,"SL")}${m("px",M.price,"አሁን")}</div>
- <div><h2 class="${op.side==="LONG"?"g":"r"}">${op.side} · ክፍት</h2><div class="mu">${op.time} UTC ሻማ መዝጊያ</div>
- <div class="row"><span>Entry</span><b>${f(op.entry)}</b></div><div class="row"><span>Stop-loss (−${pr.toFixed(2)}%)</span><b class="r">${f(op.sl)}</b></div>
- <div class="row"><span>Take-profit (+${rw.toFixed(2)}%)</span><b class="g">${f(op.tp)}</b></div>
- <div class="row"><span>RSI / ድምጽ / አዝማሚያ</span><span>${op.snap.rsi} / ${op.snap.volx}× / ${op.snap.trend}</span></div>
- <button id="cp">ሲግናሉን ኮፒ አድርግ</button> <span class="mu" id="cm"></span></div></section>`;
- $("#cp").onclick=()=>{navigator.clipboard.writeText(`${M.symbol} ${op.side}\nEntry ${op.entry}\nSL ${op.sl}\nTP ${op.tp}`).then(()=>$("#cm").textContent="ኮፒ ተደርጓል")}}
-else $("#cur").innerHTML=`<div class="empty"><h2>አሁን ሲግናል የለም</h2><p class="mu">ሲስተሙ ሻማ ሲዘጋ (በየ4 ሰዓት) ይፈትሻል። ሁኔታዎቹ ካልተሟሉ ሲግናል አይሰጥም፤ ይህ የስትራቴጂው አካል ነው።</p></div>`;
-const R=dn.map(s=>s.R),w=R.filter(x=>x>0).reduce((a,b)=>a+b,0),l=-R.filter(x=>x<=0).reduce((a,b)=>a+b,0);
-let e=1,pk=1,dd=0;[...dn].reverse().forEach(s=>{e*=1+.01*s.R;pk=Math.max(pk,e);dd=Math.min(dd,e/pk-1)});
-const it=[["ንግዶች",dn.length],["Win rate",dn.length?(R.filter(x=>x>0).length/dn.length*100).toFixed(0)+"%":"–"],["Profit factor",l?(w/l).toFixed(2):"–"],["አማካይ R",dn.length?(R.reduce((a,b)=>a+b,0)/dn.length).toFixed(2):"–"],["Max drawdown",(dd*100).toFixed(1)+"%"]];
-$("#st").innerHTML=it.map(([a,b])=>`<div><dt>${a}</dt><dd>${b}</dd></div>`).join("");
-if(dn.length<100)$("#small").textContent=`ናሙናው ትንሽ ነው (${dn.length}/100)። ቁጥሮቹን ከ100 ንግድ በፊት አትመኑ።`;
-let tab="all";
-function draw(){const a=dn.filter(s=>tab==="all"||(tab==="win"?s.status==="WIN":s.status==="LOSS"));
- $("#list").innerHTML=a.length?a.map(s=>`<details><summary><span><b class="${s.status==="WIN"?"g":"r"}">${s.status==="WIN"?"ትርፍ":"ኪሳራ"}</b> · ${s.side} · ${s.closed}</span><b>${s.R>0?"+":""}${s.R}R</b></summary>
+const D={"signals": [], "markets": {"BTCUSDT": {"price": 75984.5, "candle": "2026-11-07 08:00", "rsi": 39.7, "trend": "ከ EMA200 በታች", "closes": [81692.01, 81282.33, 81189.43, 80977.92, 80732.01, 80599.41, 79803.75, 80489.11, 80888.16, 80862.98, 80672.83, 80580.97, 80636.11, 80567.47, 80154.09, 79598.02, 80046.71, 80416.01, 80427.69, 80020.01, 80150.56, 79819.56, 79806.72, 79910.01, 80562.27, 80817.76, 80909.77, 81145.11, 81082.0, 81341.96, 80553.13, 81585.39, 81343.5, 79858.01, 79861.89, 80170.02, 81777.74, 80848.64, 77991.89, 78235.15, 78185.38, 77382.01, 77622.0, 76942.57, 77368.77, 77170.74, 77356.0, 77618.97, 77622.01, 77588.83, 77582.02, 77802.0, 77991.28, 77962.62, 77988.03, 77799.29, 78354.0, 78634.01, 78113.85, 77894.16, 77519.24, 77096.29, 76816.0, 76937.05, 76829.55, 77108.37, 77688.47, 77612.0, 77453.86, 76496.04, 78140.0, 78477.25, 80296.01, 79997.8, 80504.01, 80543.11, 80358.95, 80390.01, 76029.79, 76368.25, 76088.01, 75912.71, 75615.55, 76147.73, 75866.01, 75888.01, 75844.0, 75893.66, 76094.95, 75984.5]}, "ETHUSDT": {"price": 2245.3, "candle": "2026-11-07 08:00", "rsi": 42.5, "trend": "ከ EMA200 በታች", "closes": [2407.85, 2394.51, 2387.6, 2382.82, 2375.01, 2365.74, 2306.41, 2339.62, 2358.82, 2362.8, 2347.99, 2339.85, 2344.44, 2351.05, 2329.87, 2303.1, 2318.71, 2334.05, 2328.26, 2318.2, 2324.55, 2314.88, 2314.9, 2316.04, 2347.18, 2347.98, 2350.36, 2360.63, 2361.36, 2361.64, 2334.87, 2371.51, 2359.68, 2309.03, 2310.36, 2325.28, 2369.06, 2336.89, 2253.13, 2237.82, 2237.07, 2236.62, 2227.44, 2240.32, 2245.54, 2240.0, 2244.04, 2248.64, 2250.88, 2254.68, 2255.66, 2268.43, 2270.3, 2270.32, 2266.97, 2259.3, 2275.31, 2309.25, 2284.62, 2286.62, 2273.41, 2254.18, 2253.29, 2253.49, 2258.64, 2267.14, 2299.41, 2287.04, 2274.77, 2249.34, 2303.6, 2327.96, 2425.99, 2406.47, 2424.61, 2424.41, 2416.13, 2421.0, 2252.7, 2262.05, 2238.01, 2236.26, 2228.85, 2243.87, 2230.71, 2235.79, 2238.67, 2245.11, 2245.99, 2245.3]}, "SOLUSDT": {"price": 89.99, "candle": "2026-11-07 08:00", "rsi": 39.6, "trend": "ከ EMA200 በታች", "closes": [104.77, 103.56, 102.85, 102.66, 101.91, 101.52, 99.78, 101.17, 102.38, 102.43, 101.64, 101.33, 101.63, 101.79, 101.4, 100.21, 100.72, 101.71, 101.9, 100.49, 100.95, 100.17, 100.08, 100.13, 100.96, 101.16, 101.35, 102.03, 102.33, 102.75, 101.05, 103.06, 102.44, 99.69, 99.77, 100.38, 102.7, 99.82, 95.64, 97.25, 97.35, 96.57, 94.89, 94.79, 96.38, 96.26, 95.64, 95.91, 95.98, 95.85, 95.54, 95.66, 95.6, 95.31, 94.78, 93.97, 94.53, 95.59, 94.28, 94.09, 93.55, 91.77, 91.98, 92.15, 92.11, 92.54, 93.75, 93.28, 92.83, 91.08, 93.05, 93.59, 96.7, 94.51, 95.61, 96.28, 95.9, 96.52, 90.22, 90.12, 89.33, 89.78, 89.68, 90.43, 90.75, 90.17, 90.13, 90.06, 90.23, 89.99]}}, "checked": "2026-11-07 14:49 UTC"},TR={"v1": "v1 መነሻ", "H1": "H1 ሰፊ stop", "H2": "H2 ማሳደድ የለም", "H3": "H3 ጠባብ stop ዝለል"},S=D.signals,MK=D.markets||{},$=q=>document.querySelector(q);
+const f=x=>x==null?"–":Number(x).toLocaleString("en-US",{maximumFractionDigits:4});
+const nm=s=>(s||"").replace("USDT","");
+$("#ck").textContent="ተፈትሿል "+(D.checked||"–");
+$("#mks").innerHTML=Object.entries(MK).map(([s,m])=>{const c=m.closes||[],lo=Math.min(...c),hi=Math.max(...c),
+ p=c.map((v,i)=>`${(i/(c.length-1)*110).toFixed(1)},${(32-(v-lo)/(hi-lo||1)*30).toFixed(1)}`).join(" ");
+ return `<div class="mk"><b>${nm(s)}</b><span>${f(m.price)}</span><svg viewBox="0 0 110 34" aria-label="${nm(s)} ዋጋ"><polyline points="${p}" fill="none" stroke="var(--b)" stroke-width="1.6"/></svg><span class="mu">${m.trend} · RSI ${m.rsi}</span></div>`}).join("")||`<div class="mu">ዳታ የለም</div>`;
+const op=S.filter(s=>s.status==="OPEN"),dn=S.filter(s=>s.status!=="OPEN").sort((a,b)=>b.closed.localeCompare(a.closed));
+$("#oh").textContent=`ክፍት ሲግናሎች (${op.length})`;
+$("#cur").innerHTML=op.length?op.map((s,i)=>{const m=MK[s.symbol]||{},p=m.price??s.entry,lo=Math.min(s.sl,s.tp),hi=Math.max(s.sl,s.tp),
+ pos=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100)),L=s.side==="LONG",e=pos(s.entry);
+ return `<div class="op"><header><b class="${L?"g":"r"}">${nm(s.symbol)} ${s.side}</b><span class="mu">${TR[s.track]||s.track} · ${s.time} UTC</span></header>
+ <div class="rb"><div style="width:${e}%;background:var(${L?"--r":"--g"})"></div><div style="width:${100-e}%;background:var(${L?"--g":"--r"})"></div><i style="left:${e}%"></i><i class="p" style="left:calc(${pos(p)}% - 2px)"></i></div>
+ <div class="lv"><span class="${L?"r":"g"}">${L?"SL":"TP"} ${f(L?s.sl:s.tp)}</span><span>Entry ${f(s.entry)} · አሁን ${f(p)}</span><span class="${L?"g":"r"}">${L?"TP":"SL"} ${f(L?s.tp:s.sl)}</span></div>
+ <div style="margin-top:8px"><button class="cp" data-i="${i}">ኮፒ አድርግ</button> <span class="mu">RSI ${s.snap.rsi} · ${s.snap.trend}</span></div></div>`}).join(""):
+ `<div class="empty">አሁን ክፍት ሲግናል የለም። ሲስተሙ ሻማ ሲዘጋ (በየ4 ሰዓት) ይፈትሻል፤ ሁኔታዎቹ ካልተሟሉ ሲግናል አይሰጥም።</div>`;
+document.querySelectorAll(".cp").forEach(b=>b.onclick=()=>{const s=op[+b.dataset.i];navigator.clipboard.writeText(`${s.symbol} ${s.side}\nEntry ${s.entry}\nSL ${s.sl}\nTP ${s.tp}`).then(()=>b.textContent="ኮፒ ተደርጓል")});
+function st(a){a=[...a].sort((x,y)=>x.closed.localeCompare(y.closed));const R=a.map(s=>s.R),n=R.length,w=R.filter(x=>x>0).reduce((p,c)=>p+c,0),l=-R.filter(x=>x<=0).reduce((p,c)=>p+c,0),
+ mu=n?R.reduce((p,c)=>p+c,0)/n:0,sd=n>2?Math.sqrt(R.reduce((p,c)=>p+(c-mu)**2,0)/(n-1)):0;let e=1,pk=1,dd=0;R.forEach(r=>{e*=1+.01*r;pk=Math.max(pk,e);dd=Math.min(dd,e/pk-1)});
+ return{n,win:n?R.filter(x=>x>0).length/n:null,pf:l?w/l:null,avg:n?mu:null,t:sd?mu/(sd/Math.sqrt(n)):null,dd}}
+const rows=[...Object.keys(TR).map(k=>[TR[k],dn.filter(s=>s.track===k)]),["ሁሉም",dn]];
+$("#st").innerHTML=`<table><thead><tr><th>ስትራቴጂ</th><th>ንግዶች</th><th>Win</th><th>PF</th><th>avg R</th><th>t</th><th>DD</th></tr></thead><tbody>${rows.map(([n,a])=>{const x=st(a);
+ return `<tr><td>${n}</td><td>${x.n}</td><td>${x.win==null?"–":(x.win*100).toFixed(0)+"%"}</td><td>${x.pf==null?"–":x.pf.toFixed(2)}</td><td>${x.avg==null?"–":x.avg.toFixed(2)}</td><td>${x.t==null?"–":x.t.toFixed(1)}</td><td>${(x.dd*100).toFixed(1)}%</td></tr>`}).join("")}</tbody></table>`;
+$("#nt").textContent=`ሁሉም ስትራቴጂዎች ${Object.keys(MK).map(nm).join("፣ ")} ላይ በትይዩ ይከታተላሉ። ከ100 ንግድ በፊት ቁጥሮቹን አትመኑ፤ |t| ከ2 በታች ከሆነ ውጤቱ ከዕድል አይለይም።`;
+const F={t:"",m:"",o:""},opt=(a,k)=>a.map(([v,t])=>`<option value="${v}">${t}</option>`).join("");
+$("#fl").innerHTML=`<select id="ft"><option value="">ሁሉም ስትራቴጂ</option>${opt(Object.entries(TR))}</select><select id="fm"><option value="">ሁሉም ገበያ</option>${opt(Object.keys(MK).map(k=>[k,nm(k)]))}</select><select id="fo"><option value="">ትርፍ እና ኪሳራ</option><option value="WIN">ትርፍ</option><option value="LOSS">ኪሳራ</option></select>`;
+function draw(){const a=dn.filter(s=>(!F.t||s.track===F.t)&&(!F.m||s.symbol===F.m)&&(!F.o||s.status===F.o));
+ $("#list").innerHTML=a.length?a.map(s=>`<details><summary><span><b class="${s.status==="WIN"?"g":"r"}">${s.status==="WIN"?"ትርፍ":"ኪሳራ"}</b> · ${nm(s.symbol)} ${s.side} · ${TR[s.track]||""} · ${s.closed}</span><b>${s.R>0?"+":""}${s.R}R</b></summary>
  <div class="mu">Entry ${f(s.entry)} → ${f(s.exit)} (${s.reason}፣ ${s.candles} ሻማ) · RSI ${s.snap.rsi} · ${s.snap.trend}</div>
  ${s.tags.map(t=>`<span class="tag">${t}</span>`).join("")}
- <p class="mu">መለያዎቹ የስታቲስቲክስ ጥቆማዎች ናቸው፣ ምክንያቱን አያረጋግጡም።</p></details>`).join(""):`<p class="mu">እስካሁን የተዘጋ ሲግናል የለም።</p>`;
- $("#tabs").innerHTML=[["all","ሁሉም"],["win","ትርፍ"],["loss","ኪሳራ"]].map(([k,t])=>`<button data-k="${k}" aria-pressed="${tab===k}">${t}</button>`).join("");
- document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{tab=b.dataset.k;draw()})}
+ <p class="mu">መለያዎቹ የስታቲስቲክስ ጥቆማዎች ናቸው፣ ምክንያቱን አያረጋግጡም።</p></details>`).join(""):`<p class="mu">የተዘጋ ሲግናል የለም።</p>`}
+[["#ft","t"],["#fm","m"],["#fo","o"]].forEach(([q,k])=>$(q).onchange=function(){F[k]=this.value;draw()});
 draw();
 </script></body></html>
