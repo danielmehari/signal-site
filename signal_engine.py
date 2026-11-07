@@ -12,7 +12,7 @@ import btc_backtest as bt
 DEMO = "demo" in sys.argv
 DIR = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(DIR, "data", "signals_demo.json" if DEMO else "signals.json")
-SITE = os.path.join(DIR, "docs", "demo.html" if DEMO else "index.html")
+SITE = os.path.join(DIR, "docs", "demo.html" if DEMO else "experimental.html")
 os.makedirs(os.path.dirname(DATA), exist_ok=True)
 os.makedirs(os.path.dirname(SITE), exist_ok=True)
 MARKETS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
@@ -188,7 +188,7 @@ summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;flex-
 .tag{display:inline-block;border:1px solid var(--ln);border-radius:20px;padding:0 9px;font-size:.82rem;margin:6px 6px 0 0}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px}.top button{background:transparent;color:var(--tx);border:1px solid var(--ln)}
 </style></head><body><main>
-<div class="top"><h1 id="h"></h1><button id="lg" type="button" aria-label="Language"></button></div><div class="mu" id="ck"></div>
+<div class="top"><h1 id="h"></h1><button id="lg" type="button" aria-label="Language"></button></div><div class="mu" id="ck"></div><div class="mu"><a href="./">← ዋና ገጽ / Main page</a></div>
 <div class="warn" id="wn"></div>
 <div class="mks" id="mks"></div>
 <h2 id="oh"></h2><div id="cur"></div>
