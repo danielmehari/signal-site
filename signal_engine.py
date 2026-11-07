@@ -29,10 +29,10 @@ def nottight(d):
 
 
 TRACKS = {
-    "v1": dict(label="v1 መነሻ", sl=1.5, tp=2.5, rule=None),
-    "H1": dict(label="H1 ሰፊ stop", sl=2.5, tp=4.0, rule=None),
-    "H2": dict(label="H2 ማሳደድ የለም", sl=1.5, tp=2.5, rule=nochase),
-    "H3": dict(label="H3 ጠባብ stop ዝለል", sl=1.5, tp=2.5, rule=nottight),
+    "v1": dict(en="v1 baseline", label="v1 መነሻ", sl=1.5, tp=2.5, rule=None),
+    "H1": dict(en="H1 wide stop", label="H1 ሰፊ stop", sl=2.5, tp=4.0, rule=None),
+    "H2": dict(en="H2 no chasing", label="H2 ማሳደድ የለም", sl=1.5, tp=2.5, rule=nochase),
+    "H3": dict(en="H3 skip tight stops", label="H3 ጠባብ stop ዝለል", sl=1.5, tp=2.5, rule=nottight),
 }
 
 
@@ -149,7 +149,7 @@ def run():
     with open(DATA, "w", encoding="utf-8") as f:
         json.dump(db, f, ensure_ascii=False, indent=1)
     payload = json.dumps(db, ensure_ascii=False).replace("</", "<\\/")
-    labels = json.dumps({k: v["label"] for k, v in TRACKS.items()}, ensure_ascii=False)
+    labels = json.dumps({k: {"am": v["label"], "en": v["en"]} for k, v in TRACKS.items()}, ensure_ascii=False)
     with open(SITE, "w", encoding="utf-8") as f:
         f.write(PAGE.replace("%%DATA%%", payload).replace("%%TRACKS%%", labels))
     o = sum(s["status"] == "OPEN" for s in db["signals"])
@@ -158,7 +158,7 @@ def run():
 
 PAGE = r"""<!doctype html><html lang="am"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ክሪፕቶ ሲግናሎች (paper trading)</title>
+<title>Crypto signals</title>
 <style>
 :root{--bg:#eef1f4;--card:#fff;--tx:#101828;--mu:#5b6574;--ln:#d5dbe3;--g:#0f7b55;--r:#c0392b;--b:#1f4fd8;--w:#fff4d6}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#161b22;--tx:#e6e9ef;--mu:#8b95a5;--ln:#262d38;--g:#3ecf8e;--r:#ff7066;--b:#7aa2ff;--w:#2a2410}}
@@ -186,47 +186,70 @@ tr:last-child td{font-weight:600}
 details{background:var(--card);border:1px solid var(--ln);border-radius:8px;margin:6px 0;padding:10px 12px}
 summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .tag{display:inline-block;border:1px solid var(--ln);border-radius:20px;padding:0 9px;font-size:.82rem;margin:6px 6px 0 0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.top button{background:transparent;color:var(--tx);border:1px solid var(--ln)}
 </style></head><body><main>
-<h1>ክሪፕቶ ሲግናሎች</h1><div class="mu" id="ck"></div>
-<div class="warn"><b>ይህ paper trading ነው።</b> ምናባዊ ገንዘብ ብቻ፤ ስትራቴጂዎቹ አሁንም እየተፈተኑ ነው፣ ትርፋማነታቸው አልተረጋገጠም። የገንዘብ ምክር አይደለም፣ በእውነተኛ ገንዘብ አትገበያይባቸው።</div>
+<div class="top"><h1 id="h"></h1><button id="lg" type="button" aria-label="Language"></button></div><div class="mu" id="ck"></div>
+<div class="warn" id="wn"></div>
 <div class="mks" id="mks"></div>
-<h2 id="oh">ክፍት ሲግናሎች</h2><div id="cur"></div>
-<h2>ስትራቴጂዎች ሲወዳደሩ</h2><div class="tw" id="st"></div><div class="mu" id="nt"></div>
-<h2>ያለፉ ሲግናሎች</h2><div class="fl" id="fl"></div><div id="list"></div>
+<h2 id="oh"></h2><div id="cur"></div>
+<h2 id="ch"></h2><div class="tw" id="st"></div><div class="mu" id="nt"></div>
+<h2 id="hh"></h2><div class="fl" id="fl"></div><div id="list"></div>
 </main><script>
 const D=%%DATA%%,TR=%%TRACKS%%,S=D.signals,MK=D.markets||{},$=q=>document.querySelector(q);
+const I={
+am:{title:"ክሪፕቶ ሲግናሎች (paper trading)",h:"ክሪፕቶ ሲግናሎች",chk:"ተፈትሿል ",warn:"<b>ይህ paper trading ነው።</b> ምናባዊ ገንዘብ ብቻ፤ ስትራቴጂዎቹ አሁንም እየተፈተኑ ነው፣ ትርፋማነታቸው አልተረጋገጠም። የገንዘብ ምክር አይደለም፣ በእውነተኛ ገንዘብ አትገበያይባቸው።",
+ open:"ክፍት ሲግናሎች",none_open:"አሁን ክፍት ሲግናል የለም። ሲስተሙ ሻማ ሲዘጋ (በየ4 ሰዓት) ይፈትሻል፤ ሁኔታዎቹ ካልተሟሉ ሲግናል አይሰጥም።",cmp:"ስትራቴጂዎች ሲወዳደሩ",hist:"ያለፉ ሲግናሎች",nodata:"ዳታ የለም",
+ copy:"ኮፒ አድርግ",copied:"ኮፒ ተደርጓል",now:"አሁን",strat:"ስትራቴጂ",n:"ንግዶች",all:"ሁሉም",candles:"ሻማ",none_closed:"የተዘጋ ሲግናል የለም።",
+ tagnote:"መለያዎቹ የስታቲስቲክስ ጥቆማዎች ናቸው፣ ምክንያቱን አያረጋግጡም።",fs:"ሁሉም ስትራቴጂ",fm:"ሁሉም ገበያ",fo:"ትርፍ እና ኪሳራ",win:"ትርፍ",loss:"ኪሳራ",price:"ዋጋ",
+ nt:m=>`ሁሉም ስትራቴጂዎች ${m} ላይ በትይዩ ይከታተላሉ። ከ100 ንግድ በፊት ቁጥሮቹን አትመኑ፤ |t| ከ2 በታች ከሆነ ውጤቱ ከዕድል አይለይም።`},
+en:{title:"Crypto signals (paper trading)",h:"Crypto signals",chk:"Last checked ",warn:"<b>This is paper trading.</b> Virtual money only; the strategies are still being tested and their profitability is not proven. Not financial advice. Do not trade real money on them.",
+ open:"Open signals",none_open:"No open signal right now. The system checks every time a 4-hour candle closes, and gives no signal unless its conditions are met.",cmp:"Strategy comparison",hist:"Past signals",nodata:"No data",
+ copy:"Copy",copied:"Copied",now:"now",strat:"Strategy",n:"Trades",all:"All",candles:"candles",none_closed:"No closed signals yet.",
+ tagnote:"Tags are statistical hints; they do not prove the cause.",fs:"All strategies",fm:"All markets",fo:"Wins and losses",win:"Win",loss:"Loss",price:"price",
+ nt:m=>`All strategies run in parallel on ${m}. Do not trust the numbers before 100 trades; if |t| is below 2 the result cannot be told apart from luck.`}};
+const TG={"ወደ target ደረሰ":"Reached target","በጊዜ ወጣ":"Exited on time limit","ፈጣን stop-out":"Fast stop-out","ጠባብ stop":"Tight stop","ማሳደድ":"Chasing the move"};
+const TD={"ከ EMA200 በላይ":"Above EMA200","ከ EMA200 በታች":"Below EMA200"};
+let lg="am";try{lg=localStorage.getItem("lg")||"am"}catch(e){}
+const F={t:"",m:"",o:""};
 const f=x=>x==null?"–":Number(x).toLocaleString("en-US",{maximumFractionDigits:4});
 const nm=s=>(s||"").replace("USDT","");
-$("#ck").textContent="ተፈትሿል "+(D.checked||"–");
-$("#mks").innerHTML=Object.entries(MK).map(([s,m])=>{const c=m.closes||[],lo=Math.min(...c),hi=Math.max(...c),
- p=c.map((v,i)=>`${(i/(c.length-1)*110).toFixed(1)},${(32-(v-lo)/(hi-lo||1)*30).toFixed(1)}`).join(" ");
- return `<div class="mk"><b>${nm(s)}</b><span>${f(m.price)}</span><svg viewBox="0 0 110 34" aria-label="${nm(s)} ዋጋ"><polyline points="${p}" fill="none" stroke="var(--b)" stroke-width="1.6"/></svg><span class="mu">${m.trend} · RSI ${m.rsi}</span></div>`}).join("")||`<div class="mu">ዳታ የለም</div>`;
 const op=S.filter(s=>s.status==="OPEN"),dn=S.filter(s=>s.status!=="OPEN").sort((a,b)=>b.closed.localeCompare(a.closed));
-$("#oh").textContent=`ክፍት ሲግናሎች (${op.length})`;
-$("#cur").innerHTML=op.length?op.map((s,i)=>{const m=MK[s.symbol]||{},p=m.price??s.entry,lo=Math.min(s.sl,s.tp),hi=Math.max(s.sl,s.tp),
- pos=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100)),L=s.side==="LONG",e=pos(s.entry);
- return `<div class="op"><header><b class="${L?"g":"r"}">${nm(s.symbol)} ${s.side}</b><span class="mu">${TR[s.track]||s.track} · ${s.time} UTC</span></header>
- <div class="rb"><div style="width:${e}%;background:var(${L?"--r":"--g"})"></div><div style="width:${100-e}%;background:var(${L?"--g":"--r"})"></div><i style="left:${e}%"></i><i class="p" style="left:calc(${pos(p)}% - 2px)"></i></div>
- <div class="lv"><span class="${L?"r":"g"}">${L?"SL":"TP"} ${f(L?s.sl:s.tp)}</span><span>Entry ${f(s.entry)} · አሁን ${f(p)}</span><span class="${L?"g":"r"}">${L?"TP":"SL"} ${f(L?s.tp:s.sl)}</span></div>
- <div style="margin-top:8px"><button class="cp" data-i="${i}">ኮፒ አድርግ</button> <span class="mu">RSI ${s.snap.rsi} · ${s.snap.trend}</span></div></div>`}).join(""):
- `<div class="empty">አሁን ክፍት ሲግናል የለም። ሲስተሙ ሻማ ሲዘጋ (በየ4 ሰዓት) ይፈትሻል፤ ሁኔታዎቹ ካልተሟሉ ሲግናል አይሰጥም።</div>`;
-document.querySelectorAll(".cp").forEach(b=>b.onclick=()=>{const s=op[+b.dataset.i];navigator.clipboard.writeText(`${s.symbol} ${s.side}\nEntry ${s.entry}\nSL ${s.sl}\nTP ${s.tp}`).then(()=>b.textContent="ኮፒ ተደርጓል")});
 function st(a){a=[...a].sort((x,y)=>x.closed.localeCompare(y.closed));const R=a.map(s=>s.R),n=R.length,w=R.filter(x=>x>0).reduce((p,c)=>p+c,0),l=-R.filter(x=>x<=0).reduce((p,c)=>p+c,0),
  mu=n?R.reduce((p,c)=>p+c,0)/n:0,sd=n>2?Math.sqrt(R.reduce((p,c)=>p+(c-mu)**2,0)/(n-1)):0;let e=1,pk=1,dd=0;R.forEach(r=>{e*=1+.01*r;pk=Math.max(pk,e);dd=Math.min(dd,e/pk-1)});
  return{n,win:n?R.filter(x=>x>0).length/n:null,pf:l?w/l:null,avg:n?mu:null,t:sd?mu/(sd/Math.sqrt(n)):null,dd}}
-const rows=[...Object.keys(TR).map(k=>[TR[k],dn.filter(s=>s.track===k)]),["ሁሉም",dn]];
-$("#st").innerHTML=`<table><thead><tr><th>ስትራቴጂ</th><th>ንግዶች</th><th>Win</th><th>PF</th><th>avg R</th><th>t</th><th>DD</th></tr></thead><tbody>${rows.map(([n,a])=>{const x=st(a);
- return `<tr><td>${n}</td><td>${x.n}</td><td>${x.win==null?"–":(x.win*100).toFixed(0)+"%"}</td><td>${x.pf==null?"–":x.pf.toFixed(2)}</td><td>${x.avg==null?"–":x.avg.toFixed(2)}</td><td>${x.t==null?"–":x.t.toFixed(1)}</td><td>${(x.dd*100).toFixed(1)}%</td></tr>`}).join("")}</tbody></table>`;
-$("#nt").textContent=`ሁሉም ስትራቴጂዎች ${Object.keys(MK).map(nm).join("፣ ")} ላይ በትይዩ ይከታተላሉ። ከ100 ንግድ በፊት ቁጥሮቹን አትመኑ፤ |t| ከ2 በታች ከሆነ ውጤቱ ከዕድል አይለይም።`;
-const F={t:"",m:"",o:""},opt=(a,k)=>a.map(([v,t])=>`<option value="${v}">${t}</option>`).join("");
-$("#fl").innerHTML=`<select id="ft"><option value="">ሁሉም ስትራቴጂ</option>${opt(Object.entries(TR))}</select><select id="fm"><option value="">ሁሉም ገበያ</option>${opt(Object.keys(MK).map(k=>[k,nm(k)]))}</select><select id="fo"><option value="">ትርፍ እና ኪሳራ</option><option value="WIN">ትርፍ</option><option value="LOSS">ኪሳራ</option></select>`;
-function draw(){const a=dn.filter(s=>(!F.t||s.track===F.t)&&(!F.m||s.symbol===F.m)&&(!F.o||s.status===F.o));
- $("#list").innerHTML=a.length?a.map(s=>`<details><summary><span><b class="${s.status==="WIN"?"g":"r"}">${s.status==="WIN"?"ትርፍ":"ኪሳራ"}</b> · ${nm(s.symbol)} ${s.side} · ${TR[s.track]||""} · ${s.closed}</span><b>${s.R>0?"+":""}${s.R}R</b></summary>
- <div class="mu">Entry ${f(s.entry)} → ${f(s.exit)} (${s.reason}፣ ${s.candles} ሻማ) · RSI ${s.snap.rsi} · ${s.snap.trend}</div>
- ${s.tags.map(t=>`<span class="tag">${t}</span>`).join("")}
- <p class="mu">መለያዎቹ የስታቲስቲክስ ጥቆማዎች ናቸው፣ ምክንያቱን አያረጋግጡም።</p></details>`).join(""):`<p class="mu">የተዘጋ ሲግናል የለም።</p>`}
-[["#ft","t"],["#fm","m"],["#fo","o"]].forEach(([q,k])=>$(q).onchange=function(){F[k]=this.value;draw()});
-draw();
+function render(){
+ const T=I[lg],en=lg==="en",tn=k=>(TR[k]||{})[lg]||k,td=x=>en?(TD[x]||x):x,tg=x=>en?(TG[x]||x):x;
+ document.documentElement.lang=lg;document.title=T.title;
+ $("#h").textContent=T.h;$("#lg").textContent=en?"አማርኛ":"English";$("#ck").textContent=T.chk+(D.checked||"–");$("#wn").innerHTML=T.warn;
+ $("#mks").innerHTML=Object.entries(MK).map(([s,m])=>{const c=m.closes||[],lo=Math.min(...c),hi=Math.max(...c),
+  p=c.map((v,i)=>`${(i/(c.length-1)*110).toFixed(1)},${(32-(v-lo)/(hi-lo||1)*30).toFixed(1)}`).join(" ");
+  return `<div class="mk"><b>${nm(s)}</b><span>${f(m.price)}</span><svg viewBox="0 0 110 34" aria-label="${nm(s)} ${T.price}"><polyline points="${p}" fill="none" stroke="var(--b)" stroke-width="1.6"/></svg><span class="mu">${td(m.trend)} · RSI ${m.rsi}</span></div>`}).join("")||`<div class="mu">${T.nodata}</div>`;
+ $("#oh").textContent=`${T.open} (${op.length})`;
+ $("#cur").innerHTML=op.length?op.map((s,i)=>{const m=MK[s.symbol]||{},p=m.price??s.entry,lo=Math.min(s.sl,s.tp),hi=Math.max(s.sl,s.tp),
+  pos=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100)),L=s.side==="LONG",e=pos(s.entry);
+  return `<div class="op"><header><b class="${L?"g":"r"}">${nm(s.symbol)} ${s.side}</b><span class="mu">${tn(s.track)} · ${s.time} UTC</span></header>
+  <div class="rb"><div style="width:${e}%;background:var(${L?"--r":"--g"})"></div><div style="width:${100-e}%;background:var(${L?"--g":"--r"})"></div><i style="left:${e}%"></i><i class="p" style="left:calc(${pos(p)}% - 2px)"></i></div>
+  <div class="lv"><span class="${L?"r":"g"}">${L?"SL":"TP"} ${f(L?s.sl:s.tp)}</span><span>Entry ${f(s.entry)} · ${T.now} ${f(p)}</span><span class="${L?"g":"r"}">${L?"TP":"SL"} ${f(L?s.tp:s.sl)}</span></div>
+  <div style="margin-top:8px"><button class="cp" data-i="${i}">${T.copy}</button> <span class="mu">RSI ${s.snap.rsi} · ${td(s.snap.trend)}</span></div></div>`}).join(""):`<div class="empty">${T.none_open}</div>`;
+ document.querySelectorAll(".cp").forEach(b=>b.onclick=()=>{const s=op[+b.dataset.i];navigator.clipboard.writeText(`${s.symbol} ${s.side}\nEntry ${s.entry}\nSL ${s.sl}\nTP ${s.tp}`).then(()=>b.textContent=T.copied)});
+ $("#ch").textContent=T.cmp;
+ const rows=[...Object.keys(TR).map(k=>[tn(k),dn.filter(s=>s.track===k)]),[T.all,dn]];
+ $("#st").innerHTML=`<table><thead><tr><th>${T.strat}</th><th>${T.n}</th><th>Win</th><th>PF</th><th>avg R</th><th>t</th><th>DD</th></tr></thead><tbody>${rows.map(([n,a])=>{const x=st(a);
+  return `<tr><td>${n}</td><td>${x.n}</td><td>${x.win==null?"–":(x.win*100).toFixed(0)+"%"}</td><td>${x.pf==null?"–":x.pf.toFixed(2)}</td><td>${x.avg==null?"–":x.avg.toFixed(2)}</td><td>${x.t==null?"–":x.t.toFixed(1)}</td><td>${(x.dd*100).toFixed(1)}%</td></tr>`}).join("")}</tbody></table>`;
+ $("#nt").textContent=T.nt(Object.keys(MK).map(nm).join(en?", ":"፣ "));
+ $("#hh").textContent=T.hist;
+ const o=a=>a.map(([v,t])=>`<option value="${v}">${t}</option>`).join("");
+ $("#fl").innerHTML=`<select id="ft"><option value="">${T.fs}</option>${o(Object.keys(TR).map(k=>[k,tn(k)]))}</select><select id="fm"><option value="">${T.fm}</option>${o(Object.keys(MK).map(k=>[k,nm(k)]))}</select><select id="fo"><option value="">${T.fo}</option><option value="WIN">${T.win}</option><option value="LOSS">${T.loss}</option></select>`;
+ [["#ft","t"],["#fm","m"],["#fo","o"]].forEach(([q,k])=>{const e=$(q);e.value=F[k];e.onchange=function(){F[k]=this.value;draw()}});
+ draw()}
+function draw(){const T=I[lg],en=lg==="en",tn=k=>(TR[k]||{})[lg]||k,td=x=>en?(TD[x]||x):x,tg=x=>en?(TG[x]||x):x;
+ const a=dn.filter(s=>(!F.t||s.track===F.t)&&(!F.m||s.symbol===F.m)&&(!F.o||s.status===F.o));
+ $("#list").innerHTML=a.length?a.map(s=>`<details><summary><span><b class="${s.status==="WIN"?"g":"r"}">${s.status==="WIN"?T.win:T.loss}</b> · ${nm(s.symbol)} ${s.side} · ${tn(s.track)} · ${s.closed}</span><b>${s.R>0?"+":""}${s.R}R</b></summary>
+ <div class="mu">Entry ${f(s.entry)} → ${f(s.exit)} (${s.reason}, ${s.candles} ${T.candles}) · RSI ${s.snap.rsi} · ${td(s.snap.trend)}</div>
+ ${s.tags.map(t=>`<span class="tag">${tg(t)}</span>`).join("")}
+ <p class="mu">${T.tagnote}</p></details>`).join(""):`<p class="mu">${T.none_closed}</p>`}
+$("#lg").onclick=()=>{lg=lg==="am"?"en":"am";try{localStorage.setItem("lg",lg)}catch(e){}render()};
+render();
 </script></body></html>"""
 
 if __name__ == "__main__":
