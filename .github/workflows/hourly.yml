@@ -1,4 +1,4 @@
-ame: hourly
+name: hourly
 
 on:
   schedule:
