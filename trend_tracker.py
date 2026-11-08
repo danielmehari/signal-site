@@ -135,21 +135,21 @@ th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--ln);white-
 .lg{display:flex;gap:14px;flex-wrap:wrap;font-size:.88rem;margin-top:6px}.lg i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px}
 </style></head><body><main>
 <div class="top"><h1 id="h"></h1><button id="lg" type="button" aria-label="Language"></button></div>
-<div class="mu" id="ck"></div><div class="mu"><a href="experimental.html" id="ex"></a></div>
+<div class="mu" id="ck"></div><div class="mu"><a href="hourly.html" id="hr"></a> · <a href="experimental.html" id="ex"></a></div>
 <div class="warn" id="wn"></div>
 <h2 id="h1"></h2><div class="tw" id="pos"></div>
 <h2 id="h2"></h2><div class="ch" id="chart"></div><div class="mu" id="cn"></div>
 <h2 id="h3"></h2><div class="tw" id="st"></div><div class="mu" id="nt"></div>
 </main><script>
 const D=%%DATA%%,$=q=>document.querySelector(q),KS=["bh","don","ema","cand"];
-const I={am:{h:"ክሪፕቶ trend መከታተያ",chk:"ተፈትሿል ",ex:"ሙከራ: 4 ሰዓት ሲግናሎች →",
+const I={am:{h:"ክሪፕቶ trend መከታተያ",chk:"ተፈትሿል ",ex:"ሙከራ: 4 ሰዓት ሲግናሎች →",hr:"1 ሰዓት S2 (እጩ፣ ቀጥታ) →",
 warn:"<b>ይህ paper trading እና ምርምር ነው።</b> ምናባዊ ገንዘብ ብቻ። የገንዘብ ምክር አይደለም፣ ምንም ትርፍ ዋስትና የለም፣ እና እነዚህ ስትራቴጂዎች ቢያንስ -30% እስከ -55% የሚደርስ ኪሳራ አስተናግደዋል።",
 h1:"የዛሬ ቦታዎች (ዕለታዊ መዝጊያ እስከ ",coin:"ሳንቲም",price:"ዋጋ",tr:"አዝማሚያ",up:"ከ200 ቀን አማካይ በላይ",dn:"ከ200 ቀን አማካይ በታች",
 cand:"Ensemble + vol-target (እጩ)",inn:"ውስጥ",out:"ውጭ",h2:"የ$100 እድገት (ሎጋሪዝም ሚዛን)",live:"ቀጥታ ይጀምራል",
 cn:"ከ'ቀጥታ' መስመር በፊት ያለው ታሪካዊ ማስመሰል ነው (ሕጎቹ ቀድመው የተወሰኑ፣ ዳታው ግን ያለፈ)። ከመስመሩ በኋላ ያለው ብቻ የወደፊት ማስረጃ ነው።",
 h3:"ስታቲስቲክስ",s:"ስትራቴጂ",sh:"Sharpe",an:"ዓመታዊ",dd:"ትልቁ ኪሳራ",exp:"በገበያ ውስጥ",lv:"ቀጥታ (ቀን / ተመላሽ / ኪሳራ)",
 nt:"ታሪካዊ ማስመሰል: 8 ሳንቲሞች እኩል ክብደት፣ ክፍያ እና slippage ተካተዋል። ሳንቲሞቹ የዛሬ ታዋቂዎች ስለሆኑ (survivorship bias) ታሪካዊ ውጤቱ ከእውነቱ ይሻላል። የእጩው ስትራቴጂ ከ Buy & Hold ያነሰ ኪሳራ አሳይቷል፣ ነገር ግን ወደፊትም እንደሚሆን ማረጋገጫ የለም።"},
-en:{h:"Crypto trend tracker",chk:"Last checked ",ex:"Experimental: 4-hour signals →",
+en:{h:"Crypto trend tracker",chk:"Last checked ",ex:"Experimental: 4-hour signals →",hr:"Hourly S2 (candidate, live) →",
 warn:"<b>This is paper trading and research.</b> Virtual money only. Not financial advice, no profit is guaranteed, and these strategies have suffered drawdowns of roughly -30% to -55% in history.",
 h1:"Today’s positions (daily close up to ",coin:"Coin",price:"Price",tr:"Trend",up:"Above 200-day average",dn:"Below 200-day average",
 cand:"Ensemble + vol-target (candidate)",inn:"In",out:"Out",h2:"Growth of $100 (log scale)",live:"Live starts",
@@ -161,7 +161,7 @@ const NM=T=>({bh:"Buy & Hold",don:"Donchian 55/20",ema:"EMA 50/200",cand:T.cand}
 const pc=(x,d=0)=>x==null?"–":(x*100).toFixed(d)+"%";
 function render(){const T=I[lg],N=NM(T);
  document.documentElement.lang=lg;$("#h").textContent=T.h;document.title=T.h;$("#lg").textContent=lg==="am"?"English":"አማርኛ";
- $("#ck").textContent=T.chk+D.checked;$("#ex").textContent=T.ex;$("#wn").innerHTML=T.warn;
+ $("#ck").textContent=T.chk+D.checked;$("#ex").textContent=T.ex;$("#hr").textContent=T.hr;$("#wn").innerHTML=T.warn;
  $("#h1").textContent=T.h1+D.asof+")";
  const pw=(w,k)=>k==="cand"?pc(w,0):w>0?T.inn:T.out;
  $("#pos").innerHTML=`<table><thead><tr><th>${T.coin}</th><th>${T.price}</th><th>${T.tr}</th><th>${N.cand}</th><th>Donchian</th><th>EMA</th></tr></thead><tbody>${Object.entries(D.coins).map(([s,m])=>`<tr><td>${s.replace("USDT","")}</td><td>${Number(m.price).toLocaleString("en-US",{maximumFractionDigits:4})}</td><td class="${m.up?"g":"r"}">${m.up==null?"–":m.up?"↑ "+T.up:"↓ "+T.dn}</td><td>${pw(m.w.cand,"cand")}</td><td>${pw(m.w.don)}</td><td>${pw(m.w.ema)}</td></tr>`).join("")}</tbody></table>`;

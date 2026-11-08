@@ -24,16 +24,23 @@ DEMO = False         # True ካደረግህ ኢንተርኔት ሳይኖር በ�
 # ------------------------------------------------------------
 
 
-def download_klines():
+def download_klines(start_ms=None, end_ms=None):
     url = "https://data-api.binance.vision/api/v3/klines"
-    end = int(time.time() * 1000)
-    start = end - YEARS * 365 * 24 * 3600 * 1000
+    end = int(end_ms or time.time() * 1000)
+    start = int(start_ms or end - YEARS * 365 * 24 * 3600 * 1000)
     rows = []
     while start < end:
-        r = requests.get(url, params=dict(symbol=SYMBOL, interval=INTERVAL,
-                                          startTime=start, limit=1000), timeout=30)
-        r.raise_for_status()
-        data = r.json()
+        for attempt in range(6):  # ዝግተኛ ኢንተርኔት: እስከ 6 ጊዜ እንደገና ይሞክራል
+            try:
+                r = requests.get(url, params=dict(symbol=SYMBOL, interval=INTERVAL, startTime=start,
+                                                  endTime=end, limit=1000), timeout=120)
+                r.raise_for_status()
+                data = r.json()
+                break
+            except Exception:
+                if attempt == 5:
+                    raise
+                time.sleep(3 * (attempt + 1))
         if not data:
             break
         rows += data
