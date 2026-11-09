@@ -115,15 +115,35 @@ def utc():
     return time.strftime("%Y-%m-%d %H:%M", time.gmtime())
 
 
-def run(client, hourly):
+def load_log():
     log = json.load(open(LOG, encoding="utf-8")) if os.path.exists(LOG) else {}
     for k, v in (("ledger", {}), ("orders", []), ("episodes", []), ("errors", []), ("symbols", {})):
         log.setdefault(k, v)
+    return log
+
+
+def add_err(log, msg):
+    if not log["errors"] or log["errors"][-1][17:] != msg:  # ተመሳሳይ ስህተት በየሰዓቱ እንዳይደገም
+        log["errors"].append(f"{utc()} {msg}")
+
+
+def save_log(log):
+    log["errors"], log["orders"] = log["errors"][-20:], log["orders"][-300:]
+    log["updated"] = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
+    json.dump(log, open(LOG, "w", encoding="utf-8"), ensure_ascii=False)
+    with open(SITE, "w", encoding="utf-8") as f:  # ገጹ ሁልጊዜ ይፈጠራል (ስህተት ቢኖርም ይታያል)
+        f.write(PAGE.replace("%%DATA%%", json.dumps(log, ensure_ascii=False).replace("</", "<\\/")))
+
+
+def run(client, hourly):
+    log = load_log()
     msgs = []
     try:
         bal = client.balances()
     except Exception as ex:
+        add_err(log, f"ሒሳብ ማንበብ አልተቻለም: {str(ex)[:140]}")
         print("ሒሳብ ማንበብ አልተቻለም:", str(ex)[:160])
+        save_log(log)
         return
     for sym, st in hourly["coins"].items():
         pos, ref, base = float(st["pos"]), float(st["price"]), sym[:-4]
@@ -186,11 +206,7 @@ def run(client, hourly):
                 L.update(qty=0.0, cost=0.0, proceeds=0.0, entry_time=None, ref_entry=None, fill_entry=None)
         except Exception as ex:
             log["errors"].append(f"{utc()} {sym}: {str(ex)[:140]}")
-    log["errors"], log["orders"] = log["errors"][-20:], log["orders"][-300:]
-    log["updated"] = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
-    json.dump(log, open(LOG, "w", encoding="utf-8"), ensure_ascii=False)
-    with open(SITE, "w", encoding="utf-8") as f:
-        f.write(PAGE.replace("%%DATA%%", json.dumps(log, ensure_ascii=False).replace("</", "<\\/")))
+    save_log(log)
     if msgs:
         notify("🧪 Testnet ዲሞ (የውሸት ገንዘብ)\n" + "\n".join(msgs[:15]))
     print(f"[{log['updated']}] ትዕዛዞች: {len(log['orders'])} | የተዘጉ ንግዶች: {len(log['episodes'])} | ስህተቶች: {len(log['errors'])}")
@@ -250,6 +266,9 @@ render();
 
 def main():
     if not os.path.exists(HOURLY):
+        log = load_log()
+        add_err(log, "data/hourly.json የለም (hourly_tracker.py መጀመሪያ መሮጥ አለበት)")
+        save_log(log)
         print("data/hourly.json የለም፤ መጀመሪያ hourly_tracker.py መሮጥ አለበት")
         return
     hourly = json.load(open(HOURLY, encoding="utf-8"))
@@ -258,6 +277,9 @@ def main():
     else:
         key, sec = os.environ.get("BINANCE_TESTNET_KEY"), os.environ.get("BINANCE_TESTNET_SECRET")
         if not key or not sec:
+            log = load_log()
+            add_err(log, "BINANCE_TESTNET_KEY/SECRET አልተቀመጡም (GitHub secrets ስሞቹን ፈትሽ)")
+            save_log(log)
             print("BINANCE_TESTNET_KEY/SECRET አልተቀመጡም (GitHub secrets)፤ ዲሞ ኮፒ ይዘላል")
             return
         client = Client(key, sec)
