@@ -9,6 +9,11 @@ import json, os, sys, time
 import numpy as np
 import pandas as pd
 import btc_backtest as bt
+try:
+    from notify import notify
+except Exception:
+    def notify(text):
+        print("[ማሳወቂያ]", text)
 
 DEMO = "demo" in sys.argv
 COINS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT", "LINKUSDT"]
@@ -72,6 +77,7 @@ def run():
     db.setdefault("coins", {})
     db.setdefault("trades", [])
     ev = {}
+    alerts = []
     for s, d in frames.items():
         up, dn, v, ok = prep(d)
         c, times = d["close"].values, d["time"]
@@ -86,10 +92,12 @@ def run():
                 ev.setdefault(times[i], []).append((r, ret))
                 if held > 0 and not st["in_trade"]:
                     st.update(in_trade=True, tr=1.0, entry_time=fmt(times[i]), entry_price=round(float(c[i - 1]), 6))
+                    alerts.append(f"🟢 {s.replace('USDT', '')}: ንግድ ተከፈተ · ቦታ {held*100:.0f}% · ዋጋ {c[i - 1]:g}")
                 if st["in_trade"]:
                     st["tr"] *= 1 + r
                     if held == 0:
                         db["trades"].append(dict(s=s, e=st["entry_time"], x=fmt(times[i]), r=round(st["tr"] - 1, 4)))
+                        alerts.append(f"{'✅' if st['tr'] > 1 else '🔴'} {s.replace('USDT', '')}: ንግድ ተዘጋ · {(st['tr'] - 1)*100:+.1f}% · ከ {st['entry_time']}")
                         st.update(in_trade=False, tr=1.0, entry_time=None, entry_price=None)
             st["held_prev"] = held
             if ok[i]:
@@ -110,6 +118,8 @@ def run():
     json.dump(db, open(DATA, "w", encoding="utf-8"), ensure_ascii=False)
     with open(SITE, "w", encoding="utf-8") as f:
         f.write(PAGE.replace("%%DATA%%", json.dumps(db, ensure_ascii=False).replace("</", "<\\/")))
+    if alerts and not first:
+        notify("⏱ 1 ሰዓት S2 (paper)\n" + "\n".join(alerts[:15]))
     print(f"[{db['checked']}] ሰዓታት (live): {len(db['eq']['t']) - 1} | ንግዶች: {len(db['trades'])} | live ከ {db['live_start']}")
 
 

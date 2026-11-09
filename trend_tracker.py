@@ -8,6 +8,11 @@ import json, os, sys
 import numpy as np
 import pandas as pd
 import btc_backtest as bt
+try:
+    from notify import notify
+except Exception:
+    def notify(text):
+        print("[ማሳወቂያ]", text)
 
 DEMO = "demo" in sys.argv
 COINS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT", "LINKUSDT"]
@@ -108,7 +113,19 @@ def run():
         out["stats"][k] = dict(hist=stats(hist), exp=round(float(expo[k][expo[k].index.isin(hist.index)].mean()), 2),
                                live=dict(days=len(live), ret=round(float(le.iloc[-1] - 1), 4) if len(live) else 0,
                                          dd=round(float((le / le.cummax() - 1).min()), 4) if len(live) else 0))
+    old, alerts = db.get("coins") or {}, []
+    for sym, m in coins.items():
+        o, n, nm = (old.get(sym) or {}).get("w"), m["w"], sym.replace("USDT", "")
+        if not o or "c25" not in o:
+            continue
+        if abs(n["c25"] - o["c25"]) >= 0.10 or (o["c25"] == 0) != (n["c25"] == 0):
+            alerts.append(f"{nm}: {o['c25']*100:.0f}% → {n['c25']*100:.0f}%")
+        for k, lab in (("don", "Donchian"), ("ema", "EMA")):
+            if (o.get(k, 0) > 0) != (n[k] > 0):
+                alerts.append(f"{nm} {lab}: {'ውስጥ ገባ' if n[k] > 0 else 'ወጣ'}")
     json.dump(out, open(DATA, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if alerts:
+        notify(f"📊 ዕለታዊ trend ({out['asof']}፣ 25% ደረጃ፣ paper)\n" + "\n".join(alerts[:20]))
     with open(SITE, "w", encoding="utf-8") as f:
         f.write(PAGE.replace("%%DATA%%", json.dumps(out, ensure_ascii=False).replace("</", "<\\/")))
     print(f"[{out['checked']}] ሳንቲሞች: {len(coins)} | እስከ {out['asof']} | live ከ {out['live_start']} | {SITE}")
