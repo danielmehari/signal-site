@@ -18,6 +18,8 @@ jobs:
     env:
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      BINANCE_TESTNET_KEY: ${{ secrets.BINANCE_TESTNET_KEY }}
+      BINANCE_TESTNET_SECRET: ${{ secrets.BINANCE_TESTNET_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,6 +27,8 @@ jobs:
           python-version: "3.12"
       - run: pip install pandas numpy requests
       - run: python hourly_tracker.py
+      - run: python testnet_copier.py
+        continue-on-error: true
       - name: Save results
         run: |
           git config user.name "signal-bot"
